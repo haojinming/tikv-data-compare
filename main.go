@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -425,6 +426,32 @@ func runRawKvDiff(cmd *cobra.Command, name string) error {
 	return RawKVDiff(ctx, cfg.SrcPD, cfg.DstPD, srcAPIVersion, cfg.StartKey, cfg.EndKey)
 }
 
+func runRawKvFormat(cmd *cobra.Command, name string) error {
+	cfg := Config{}
+	err := cfg.ParseFromFlags(cmd.Flags())
+	if err != nil {
+		fmt.Printf("parse cmd flags error, %v.\n", err)
+		return err
+	}
+	fmt.Printf("Formated Raw StartKey:%s.\n", string(cfg.StartKey))
+	fmt.Printf("Formated Raw EndKey:%s.\n", string(cfg.EndKey))
+	fmt.Printf("Formated Hex StartKey:%s.\n", strings.ToUpper(hex.EncodeToString(cfg.StartKey)))
+	fmt.Printf("Formated Hex EndKey:%s.\n", strings.ToUpper(hex.EncodeToString(cfg.EndKey)))
+	return nil
+}
+
+func runRawKvDecodeTs(cmd *cobra.Command, name string) error {
+	cfg := Config{}
+	err := cfg.ParseFromFlags(cmd.Flags())
+	if err != nil {
+		fmt.Printf("parse cmd flags error, %v.\n", err)
+		return err
+	}
+	ts := binary.BigEndian.Uint64(cfg.StartKey)
+	fmt.Printf("Decoded Ts:%d.\n", ^ts)
+	return nil
+}
+
 func NewChecksumCommand() *cobra.Command {
 	meta := &cobra.Command{
 		Use:          "checksum",
@@ -467,6 +494,34 @@ func NewDiffCommand() *cobra.Command {
 	return meta
 }
 
+func NewFormatCommand() *cobra.Command {
+	meta := &cobra.Command{
+		Use:          "format",
+		Short:        "commands to format input key",
+		SilenceUsage: true,
+		Args:         cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runRawKvFormat(cmd, "Format")
+		},
+	}
+
+	return meta
+}
+
+func NewDecodeCommand() *cobra.Command {
+	meta := &cobra.Command{
+		Use:          "decode",
+		Short:        "commands to decode ts",
+		SilenceUsage: true,
+		Args:         cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runRawKvDecodeTs(cmd, "Decode")
+		},
+	}
+
+	return meta
+}
+
 func main() {
 	rootCmd := &cobra.Command{
 		Use:              "rawkv-data-check",
@@ -478,6 +533,8 @@ func main() {
 	rootCmd.AddCommand(NewChecksumCommand())
 	rootCmd.AddCommand(NewScanCommand())
 	rootCmd.AddCommand(NewDiffCommand())
+	rootCmd.AddCommand(NewFormatCommand())
+	rootCmd.AddCommand(NewDecodeCommand())
 	// Ouputs cmd.Print to stdout.
 	rootCmd.SetOut(os.Stdout)
 
