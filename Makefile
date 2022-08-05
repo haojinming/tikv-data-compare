@@ -19,10 +19,10 @@ BUILD_BIN_PATH := $(shell pwd)/bin
 
 #### Build ####
 build: 
-	$(GO) build -tags codes -gcflags "all=-N -l" -o $(BUILD_BIN_PATH)/tikv-data-compare *.go
+	$(GO) build -tags codes -gcflags "all=-N -l" -o $(BUILD_BIN_PATH)/tikv-data-compare cmd/*.go
 
 release: 
-	$(GO) build -tags codes -o $(BUILD_BIN_PATH)/tikv-data-compare *.go
+	$(GO) build -tags codes -o $(BUILD_BIN_PATH)/tikv-data-compare cmd/*.go
  
 #### Clean up ####
 
